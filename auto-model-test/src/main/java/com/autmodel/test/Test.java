@@ -1,6 +1,5 @@
 package com.autmodel.test;
 
-import com.sun.tools.javac.code.SysUserADDDTO;
 
 /**
  * @author rodger
@@ -8,7 +7,6 @@ import com.sun.tools.javac.code.SysUserADDDTO;
  */
 public class Test {
     public static void main(String[] args) {
-     SysUserADDDTO sysUserADDDTO=new SysUserADDDTO();
         System.out.println("hello world");
     }
 }
