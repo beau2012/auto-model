@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>com.auto-model</groupId>
+            <groupId>io.github.beau2012</groupId>
             <artifactId>auto-model-processor</artifactId>
             <version>1.0.0</version>
             <scope>compile</scope>
