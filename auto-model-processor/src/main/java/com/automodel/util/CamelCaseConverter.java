@@ -25,7 +25,7 @@ public class CamelCaseConverter {
     /**
      * 通用方法：将字符串转换为驼峰命名
      *
-     * @param input         输入字符串
+     * @param input          输入字符串
      * @param upperCaseFirst 是否将第一个单词的首字母大写
      * @return 驼峰命名的字符串
      */

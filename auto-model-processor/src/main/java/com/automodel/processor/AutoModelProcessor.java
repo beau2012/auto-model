@@ -40,10 +40,10 @@ public class AutoModelProcessor extends AbstractProcessor {
         for (TypeElement annotation : annotations) {
             Set<? extends Element> elements = env.getElementsAnnotatedWith(annotation);
             for (Element element : elements) {
-                if (element.getKind()  == ElementKind.CLASS) {
+                if (element.getKind() == ElementKind.CLASS) {
                     TypeElement classElement = (TypeElement) element;
                     AutoModel autoModel = classElement.getAnnotation(AutoModel.class);
-                    for (ModelTypeEnum type : autoModel.value())  {
+                    for (ModelTypeEnum type : autoModel.value()) {
                         generateDtoClass(classElement, type); // 生成对应类型 DTO
                     }
                 }
@@ -51,6 +51,7 @@ public class AutoModelProcessor extends AbstractProcessor {
         }
         return true;
     }
+
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> supportedAnnotationTypes = new HashSet<>();
@@ -58,23 +59,25 @@ public class AutoModelProcessor extends AbstractProcessor {
         System.out.println(AutoModel.class.getName());
         return supportedAnnotationTypes;
     }
+
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
     }
+
     private void generateDtoClass(TypeElement entityClass, ModelTypeEnum modelTypeEnum) {
         System.out.println("auto-model init ...");
         // 使用 JavaPoet 构建 DTO 类结构
-        String className = entityClass.getSimpleName()  + CamelCaseConverter.toUpperCamelCase(modelTypeEnum.name()) + "Dto";
+        String className = entityClass.getSimpleName() + CamelCaseConverter.toUpperCamelCase(modelTypeEnum.name()) + "Dto";
         TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className)
-                .addModifiers(Modifier.PUBLIC )
+                .addModifiers(Modifier.PUBLIC)
 //                .addAnnotation(Data.class)
                 ;  // 假设使用 Lombok
 
         // 遍历实体类字段
-        for (Element field : entityClass.getEnclosedElements())  {
-            if (field.getKind()  == ElementKind.FIELD) {
-                if (!"serialVersionUID".equals(field.getSimpleName().toString())){
+        for (Element field : entityClass.getEnclosedElements()) {
+            if (field.getKind() == ElementKind.FIELD) {
+                if (!"serialVersionUID".equals(field.getSimpleName().toString())) {
                     classBuilder.addField(
                             TypeName.get(field.asType()),
                             field.getSimpleName().toString(),
@@ -87,7 +90,7 @@ public class AutoModelProcessor extends AbstractProcessor {
 
         // 写入文件
         JavaFile javaFile = JavaFile.builder(
-                elements.getPackageOf(entityClass).getQualifiedName().toString()+".dto",
+                elements.getPackageOf(entityClass).getQualifiedName().toString() + ".dto",
                 classBuilder.build()
         ).build();
         try {
