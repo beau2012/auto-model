@@ -1,5 +1,6 @@
 package com.automodel.processor;
 
+import com.automodel.adapter.AutoModelClassBuilderAdapter;
 import com.automodel.annotation.AutoModel;
 import com.automodel.enums.ModelTypeEnum;
 import com.automodel.util.CamelCaseConverter;
@@ -28,6 +29,16 @@ public class AutoModelProcessor extends AbstractProcessor {
 
     private Elements elements;
 
+    private AutoModelClassBuilderAdapter autoModelClassBuilderAdapter;
+
+    public AutoModelClassBuilderAdapter getAutoModelClassBuilderAdapter() {
+        return autoModelClassBuilderAdapter;
+    }
+
+    public void setAutoModelClassBuilderAdapter(AutoModelClassBuilderAdapter autoModelClassBuilderAdapter) {
+        this.autoModelClassBuilderAdapter = autoModelClassBuilderAdapter;
+    }
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -36,7 +47,6 @@ public class AutoModelProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
-        System.out.println("auto");
         for (TypeElement annotation : annotations) {
             Set<? extends Element> elements = env.getElementsAnnotatedWith(annotation);
             for (Element element : elements) {
@@ -66,14 +76,13 @@ public class AutoModelProcessor extends AbstractProcessor {
     }
 
     private void generateDtoClass(TypeElement entityClass, ModelTypeEnum modelTypeEnum) {
-        System.out.println("auto-model init ...");
         // 使用 JavaPoet 构建 DTO 类结构
         String className = entityClass.getSimpleName() + CamelCaseConverter.toUpperCamelCase(modelTypeEnum.name()) + "Dto";
         TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC)
 //                .addAnnotation(Data.class)
                 ;  // 假设使用 Lombok
-
+        autoModelClassBuilderAdapter.handle(classBuilder);
         // 遍历实体类字段
         for (Element field : entityClass.getEnclosedElements()) {
             if (field.getKind() == ElementKind.FIELD) {
