@@ -11,8 +11,8 @@ import java.lang.annotation.Target;
  * @author rodger
  * @date 2025-03-04
  */
-@Retention(RetentionPolicy.SOURCE) // 仅保留在源码阶段
-@Target(ElementType.TYPE)          // 作用于类/接口
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.TYPE)
 public @interface AutoModel {
     ModelTypeEnum[] value() default {
             ModelTypeEnum.ADD,
@@ -20,4 +20,5 @@ public @interface AutoModel {
             ModelTypeEnum.DELETE
     };
 
+    boolean lombok() default false;
 }

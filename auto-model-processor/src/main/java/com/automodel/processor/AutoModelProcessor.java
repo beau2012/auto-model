@@ -1,9 +1,10 @@
 package com.automodel.processor;
 
 import com.automodel.annotation.AutoModel;
-import com.automodel.config.AutoModelGlobalConfig;
+import com.automodel.annotation.AutoModelId;
 import com.automodel.enums.ModelTypeEnum;
 import com.automodel.util.CamelCaseConverter;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -48,7 +49,11 @@ public class AutoModelProcessor extends AbstractProcessor {
                     TypeElement classElement = (TypeElement) element;
                     AutoModel autoModel = classElement.getAnnotation(AutoModel.class);
                     for (ModelTypeEnum type : autoModel.value()) {
-                        generateDtoClass(classElement, type); // 生成对应类型 DTO
+                        try {
+                            this.generateDtoClass(classElement, type,autoModel.lombok()); // 生成对应类型 DTO
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
             }
@@ -68,24 +73,35 @@ public class AutoModelProcessor extends AbstractProcessor {
         return SourceVersion.latestSupported();
     }
 
-    private void generateDtoClass(TypeElement entityClass, ModelTypeEnum modelTypeEnum) {
+    private void generateDtoClass(TypeElement entityClass, ModelTypeEnum modelTypeEnum, boolean lombok) throws ClassNotFoundException {
         // 使用 JavaPoet 构建 DTO 类结构
         String className = entityClass.getSimpleName() + CamelCaseConverter.toUpperCamelCase(modelTypeEnum.name()) + "Dto";
         TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className)
-                .addModifiers(Modifier.PUBLIC)
-//                .addAnnotation(Data.class)
-                ;  // 假设使用 Lombok
-        AutoModelGlobalConfig.getAutoModelClassBuilder().handle(classBuilder);
+                .addModifiers(Modifier.PUBLIC);
+        if (lombok) {
+            classBuilder.addAnnotation(Class.forName("lombok.Data"));
+        }
         // 遍历实体类字段
         for (Element field : entityClass.getEnclosedElements()) {
             if (field.getKind() == ElementKind.FIELD) {
-                if (!"serialVersionUID".equals(field.getSimpleName().toString())) {
-                    classBuilder.addField(
-                            TypeName.get(field.asType()),
-                            field.getSimpleName().toString(),
-                            Modifier.PRIVATE
-                    );
+                if ("serialVersionUID".equals(field.getSimpleName().toString())) {
+                    continue;
                 }
+                if(ModelTypeEnum.ADD.equals(modelTypeEnum)){
+                    if(field.getAnnotation(AutoModelId.class) != null){
+                        continue;
+                    }
+                }
+                if(ModelTypeEnum.DELETE.equals(modelTypeEnum)){
+                    if(field.getAnnotation(AutoModelId.class) == null){
+                        continue;
+                    }
+                }
+                classBuilder.addField(
+                        TypeName.get(field.asType()),
+                        field.getSimpleName().toString(),
+                        Modifier.PRIVATE
+                );
             }
         }
 
