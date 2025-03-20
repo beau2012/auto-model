@@ -6,12 +6,12 @@
     <parent>
         <groupId>io.github.beau2012</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
     <artifactId>auto-model-processor</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <dependencies>
         <dependency>

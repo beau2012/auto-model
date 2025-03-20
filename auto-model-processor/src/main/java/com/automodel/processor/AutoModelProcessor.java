@@ -1,7 +1,7 @@
 package com.automodel.processor;
 
-import com.automodel.adapter.AutoModelClassBuilderAdapter;
 import com.automodel.annotation.AutoModel;
+import com.automodel.config.AutoModelGlobalConfig;
 import com.automodel.enums.ModelTypeEnum;
 import com.automodel.util.CamelCaseConverter;
 import com.squareup.javapoet.JavaFile;
@@ -16,7 +16,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,26 +27,20 @@ import java.util.Set;
  */
 public class AutoModelProcessor extends AbstractProcessor {
 
-    private Elements elements;
 
-    private AutoModelClassBuilderAdapter autoModelClassBuilderAdapter;
+    private ProcessingEnvironment processingEnv;
 
-    public AutoModelClassBuilderAdapter getAutoModelClassBuilderAdapter() {
-        return autoModelClassBuilderAdapter;
-    }
-
-    public void setAutoModelClassBuilderAdapter(AutoModelClassBuilderAdapter autoModelClassBuilderAdapter) {
-        this.autoModelClassBuilderAdapter = autoModelClassBuilderAdapter;
-    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        elements = processingEnv.getElementUtils();
+        this.processingEnv = processingEnv;
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment env) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+                "autoModel  processing");
         for (TypeElement annotation : annotations) {
             Set<? extends Element> elements = env.getElementsAnnotatedWith(annotation);
             for (Element element : elements) {
@@ -66,7 +60,6 @@ public class AutoModelProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> supportedAnnotationTypes = new HashSet<>();
         supportedAnnotationTypes.add(AutoModel.class.getName());
-        System.out.println(AutoModel.class.getName());
         return supportedAnnotationTypes;
     }
 
@@ -82,7 +75,7 @@ public class AutoModelProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC)
 //                .addAnnotation(Data.class)
                 ;  // 假设使用 Lombok
-        autoModelClassBuilderAdapter.handle(classBuilder);
+        AutoModelGlobalConfig.getAutoModelClassBuilder().handle(classBuilder);
         // 遍历实体类字段
         for (Element field : entityClass.getEnclosedElements()) {
             if (field.getKind() == ElementKind.FIELD) {
@@ -99,13 +92,14 @@ public class AutoModelProcessor extends AbstractProcessor {
 
         // 写入文件
         JavaFile javaFile = JavaFile.builder(
-                elements.getPackageOf(entityClass).getQualifiedName().toString() + ".dto",
+                processingEnv.getElementUtils().getPackageOf(entityClass).getQualifiedName().toString() + ".dto",
                 classBuilder.build()
         ).build();
         try {
             javaFile.writeTo(processingEnv.getFiler());
         } catch (IOException e) {
-            e.printStackTrace();
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to generate DTO class: " + e.getMessage());
         }
     }
 }
